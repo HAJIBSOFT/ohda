@@ -12,14 +12,17 @@
 </head>
 <body>
   <div id="appShell" class="app-shell">
-    <!-- الشريط الجانبي (لأجهزة الكمبيوتر) -->
-    <aside class="sidebar">
+    <!-- الشريط الجانبي -->
+    <aside id="sidebar" class="sidebar">
       <div class="brand">
         <div class="brand-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
         <div>
           <h1>عُهدتي</h1>
           <span>إدارة الأصول والعهد</span>
         </div>
+        <button id="btnCloseDrawer" class="icon-btn mobile-only" onclick="toggleMobileDrawer(false)">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
       </div>
 
       <nav class="side-nav">
@@ -30,16 +33,19 @@
           <i class="fa-solid fa-laptop-code"></i><span>الأصناف والرصيد</span>
         </button>
         <button class="nav-item" data-view="handover">
-          <i class="fa-solid fa-hand-holding-hand"></i><span>تسليم عهدة لموظف</span>
+          <i class="fa-solid fa-hand-holding-hand"></i><span>تسليم عهدة (سند جديد)</span>
         </button>
         <button class="nav-item" data-view="return">
           <i class="fa-solid fa-rotate-left"></i><span>استرجاع / إخلاء عهدة</span>
         </button>
+        <button class="nav-item" data-view="vouchers">
+          <i class="fa-solid fa-file-invoice"></i><span>أرشيف السندات والطباعة</span>
+        </button>
         <button class="nav-item" data-view="employees">
           <i class="fa-solid fa-users"></i><span>الموظفون والأفراد</span>
         </button>
-        <button class="nav-item" data-view="movements">
-          <i class="fa-solid fa-clock-rotate-left"></i><span>سجل الحركة والتقارير</span>
+        <button class="nav-item" data-view="reports">
+          <i class="fa-solid fa-chart-line"></i><span>التقارير التفصيلية</span>
         </button>
       </nav>
 
@@ -49,12 +55,15 @@
         </button>
       </div>
     </aside>
+    <div id="drawerBackdrop" class="drawer-backdrop" onclick="toggleMobileDrawer(false)"></div>
 
     <!-- المحتوى الرئيسي -->
     <main class="main-content">
-      <!-- الشريط العلوي -->
       <header class="topbar">
         <div class="topbar-right">
+          <button class="icon-btn mobile-only" onclick="toggleMobileDrawer(true)" title="القائمة">
+            <i class="fa-solid fa-bars"></i>
+          </button>
           <h2 id="pageTitle">لوحة المعلومات</h2>
           <span id="connectionBadge" class="status-pill demo">
             <i class="fa-solid fa-circle"></i> وضع المعاينة التجريبي
@@ -73,7 +82,6 @@
         </div>
       </header>
 
-      <!-- شريط تنبيه وضع المعاينة -->
       <div id="demoBanner" class="demo-banner">
         <div>
           <i class="fa-solid fa-circle-info"></i>
@@ -107,10 +115,10 @@
             </div>
           </div>
           <div class="kpi-card rose">
-            <div class="kpi-icon"><i class="fa-solid fa-file-signature"></i></div>
+            <div class="kpi-icon"><i class="fa-solid fa-file-invoice"></i></div>
             <div class="kpi-info">
-              <span>إجمالي الحركات</span>
-              <h3 id="kpiTotalTx">0</h3>
+              <span>إجمالي السندات</span>
+              <h3 id="kpiTotalVouchers">0</h3>
             </div>
           </div>
         </div>
@@ -131,24 +139,24 @@
             <div class="quick-actions-grid">
               <button class="quick-btn" onclick="switchView('handover')">
                 <i class="fa-solid fa-hand-holding-hand"></i>
-                <span>تسليم عهدة جديدة</span>
+                <span>تسليم عهدة (سند)</span>
               </button>
               <button class="quick-btn" onclick="switchView('return')">
                 <i class="fa-solid fa-rotate-left"></i>
                 <span>استرجاع عهدة</span>
               </button>
-              <button class="quick-btn" onclick="openAssetModal()">
-                <i class="fa-solid fa-plus"></i>
-                <span>إضافة جهاز / صنف</span>
+              <button class="quick-btn" onclick="switchView('reports')">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>التقارير المفصلة</span>
               </button>
-              <button class="quick-btn" onclick="openEmployeeModal()">
-                <i class="fa-solid fa-user-plus"></i>
-                <span>إضافة موظف</span>
+              <button class="quick-btn" onclick="switchView('vouchers')">
+                <i class="fa-solid fa-print"></i>
+                <span>أرشيف السندات</span>
               </button>
             </div>
 
-            <h4 class="sub-heading">أحدث حركات العهد</h4>
-            <div id="dashboardRecentTx" class="recent-list"></div>
+            <h4 class="sub-heading">أحدث السندات المسجلة</h4>
+            <div id="dashboardRecentVouchers" class="recent-list"></div>
           </div>
         </div>
       </section>
@@ -187,13 +195,13 @@
         </div>
       </section>
 
-      <!-- 3. تسليم عهدة لموظف -->
+      <!-- 3. تسليم عهدة لموظف (متعدد الأجهزة) -->
       <section id="view-handover" class="view">
         <div class="card form-card">
           <div class="card-header">
-            <h3><i class="fa-solid fa-file-signature"></i> نموذج تسليم عهدة لموظف</h3>
-            <button type="button" class="btn-outline" onclick="printBlankOrCurrentForm('HANDOVER')">
-              <i class="fa-solid fa-print"></i> طباعة نموذج ورقي للتوقيع
+            <h3><i class="fa-solid fa-file-signature"></i> إنشاء سند تسليم عهدة (جهاز أو عدة أجهزة)</h3>
+            <button type="button" class="btn-outline" onclick="printDraftHandover()">
+              <i class="fa-solid fa-print"></i> طباعة مسودة للتوقيع الورقي
             </button>
           </div>
 
@@ -208,42 +216,78 @@
               </div>
 
               <div class="form-group">
-                <label>الجهاز / العهدة *</label>
-                <select id="hoAsset" required></select>
-                <small id="hoAvailableHint" class="field-hint"></small>
-              </div>
-
-              <div class="form-group">
-                <label>الكمية *</label>
-                <input type="number" id="hoQty" min="1" value="1" required />
-              </div>
-
-              <div class="form-group">
                 <label>تاريخ التسليم *</label>
                 <input type="date" id="hoDate" required />
               </div>
 
-              <div class="form-group">
-                <label>حالة الجهاز عند التسليم</label>
-                <select id="hoCondition">
-                  <option value="جديد">جديد</option>
-                  <option value="سليم - مستعمل">سليم - مستعمل</option>
-                  <option value="يوجد خدوش بسيطة">يوجد خدوش بسيطة</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label>ملاحظات / ملحقات (شاحن، حقيبة...)</label>
-                <input type="text" id="hoNotes" placeholder="مثال: مع الشاحن الأصلي والماوس" />
+              <div class="form-group full-col">
+                <label>ملاحظات عامة على السند</label>
+                <input type="text" id="hoNotes" placeholder="مثال: تسليم أجهزة العمل لمشروع التحول الرقمي" />
               </div>
             </div>
 
-            <!-- التوقيع أو رفع النموذج الموقع -->
+            <!-- إضافة الأجهزة إلى سلة السند -->
+            <div class="voucher-builder">
+              <div class="builder-header">
+                <h4><i class="fa-solid fa-layer-group"></i> الأجهزة والعهد المضافة في هذا السند</h4>
+                <span id="hoCartSummary" class="badge badge-info">0 أصناف | 0 قطعة</span>
+              </div>
+
+              <div class="builder-add-row">
+                <div class="form-group">
+                  <label>اختر الجهاز / الصنف</label>
+                  <select id="hoPickAsset"></select>
+                </div>
+                <div class="form-group">
+                  <label>الكمية</label>
+                  <input type="number" id="hoPickQty" min="1" value="1" />
+                </div>
+                <div class="form-group">
+                  <label>الحالة عند التسليم</label>
+                  <select id="hoPickCondition">
+                    <option value="جديد">جديد</option>
+                    <option value="سليم - مستعمل">سليم - مستعمل</option>
+                    <option value="خدوش بسيطة">خدوش بسيطة</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>ملحقات / ملاحظة الصنف</label>
+                  <input type="text" id="hoPickNote" placeholder="شاحن، حقيبة..." />
+                </div>
+                <div class="form-group builder-btn-col">
+                  <button type="button" class="btn-primary" onclick="addHoCartItem()">
+                    <i class="fa-solid fa-plus"></i> إضافة للسند
+                  </button>
+                </div>
+              </div>
+              <small id="hoAvailableHint" class="field-hint"></small>
+
+              <div class="table-responsive" style="margin-top:12px;">
+                <table class="data-table compact-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>الصنف / الجهاز</th>
+                      <th>الكود / التسلسلي</th>
+                      <th>الكمية</th>
+                      <th>الحالة</th>
+                      <th>ملاحظات</th>
+                      <th>حذف</th>
+                    </tr>
+                  </thead>
+                  <tbody id="hoCartTableBody">
+                    <tr><td colspan="7" style="text-align:center;color:var(--text-muted)">لم يتم إضافة أجهزة للسند بعد</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- التوقيع أو رفع النموذج -->
             <div class="signature-section">
-              <label class="section-label">توثيق الاستلام *</label>
+              <label class="section-label">توقيع المستلم (إلزامي لاعتماد السند والطباعة) *</label>
               <div class="sign-tabs">
                 <button type="button" class="sign-tab active" data-target="ho" data-mode="SCREEN">
-                  <i class="fa-solid fa-pen-nib"></i> التوقيع على الشاشة
+                  <i class="fa-solid fa-pen-nib"></i> التوقيع على الشاشة (يظهر في الطباعة)
                 </button>
                 <button type="button" class="sign-tab" data-target="ho" data-mode="UPLOAD">
                   <i class="fa-solid fa-cloud-arrow-up"></i> رفع نموذج موقع (صورة / PDF)
@@ -271,34 +315,25 @@
 
             <div class="form-actions">
               <button type="submit" class="btn-primary btn-lg">
-                <i class="fa-solid fa-check-double"></i> اعتماد وتسليم العهدة
+                <i class="fa-solid fa-print"></i> حفظ السند والطباعة الإجبارية
               </button>
             </div>
           </form>
         </div>
       </section>
 
-      <!-- 4. استرجاع عهدة (تسليم من الموظف للشركة) -->
+      <!-- 4. استرجاع عهدة (متعدد الأجهزة من السند) -->
       <section id="view-return" class="view">
         <div class="card form-card">
           <div class="card-header">
-            <h3><i class="fa-solid fa-rotate-left"></i> نموذج استرجاع عهدة / إخلاء طرف</h3>
-            <button type="button" class="btn-outline" onclick="printBlankOrCurrentForm('RETURN')">
-              <i class="fa-solid fa-print"></i> طباعة نموذج إخلاء طرف للتوقيع
-            </button>
+            <h3><i class="fa-solid fa-rotate-left"></i> سند استرجاع عهدة / إخلاء طرف</h3>
           </div>
 
           <form id="returnForm" class="modern-form">
             <div class="form-grid">
-              <div class="form-group full-col">
-                <label>اختر العهدة النشطة المطلوب استرجاعها *</label>
-                <select id="retActiveTx" required></select>
-                <small id="retTxInfo" class="field-hint"></small>
-              </div>
-
               <div class="form-group">
-                <label>الكمية المسترجعة *</label>
-                <input type="number" id="retQty" min="1" value="1" required />
+                <label>تصفية حسب الموظف (اختياري)</label>
+                <select id="retFilterEmployee"></select>
               </div>
 
               <div class="form-group">
@@ -306,27 +341,49 @@
                 <input type="date" id="retDate" required />
               </div>
 
-              <div class="form-group">
-                <label>حالة العهدة عند الاستلام *</label>
-                <select id="retCondition">
-                  <option value="سليم وبحالة ممتازة">سليم وبحالة ممتازة</option>
-                  <option value="سليم مع استهلاك طبيعي">سليم مع استهلاك طبيعي</option>
-                  <option value="بحاجة إلى صيانة">بحاجة إلى صيانة</option>
-                  <option value="تالف / مكسور">تالف / مكسور</option>
-                </select>
+              <div class="form-group full-col">
+                <label>اختر سند التسليم النشط المطلوب الاسترجاع منه *</label>
+                <select id="retActiveVoucher" required></select>
+                <small id="retVoucherInfo" class="field-hint"></small>
               </div>
 
-              <div class="form-group">
-                <label>ملاحظات الفحص</label>
-                <input type="text" id="retNotes" placeholder="مثال: تم استلام الجهاز والملحقات كاملة" />
+              <div class="form-group full-col">
+                <label>ملاحظات عامة على سند الإرجاع</label>
+                <input type="text" id="retNotes" placeholder="مثال: استرجاع العهدة عند إنهاء المشروع" />
+              </div>
+            </div>
+
+            <!-- جدول الأجهزة القابلة للاسترجاع داخل السند -->
+            <div class="voucher-builder">
+              <div class="builder-header">
+                <h4><i class="fa-solid fa-list-check"></i> حدد الأجهزة والكميات المراد إرجاعها</h4>
+                <button type="button" class="btn-sm btn-outline" onclick="toggleSelectAllReturnItems(true)">تحديد الكل</button>
+              </div>
+
+              <div class="table-responsive">
+                <table class="data-table compact-table">
+                  <thead>
+                    <tr>
+                      <th>تحديد</th>
+                      <th>الجهاز / الصنف</th>
+                      <th>المتبقي لدى الموظف</th>
+                      <th>الكمية المرتجعة</th>
+                      <th>حالة الاستلام</th>
+                      <th>ملاحظة الفحص</th>
+                    </tr>
+                  </thead>
+                  <tbody id="retItemsTableBody">
+                    <tr><td colspan="6" style="text-align:center;color:var(--text-muted)">اختر سند تسليم لعرض الأجهزة المرتبطة به</td></tr>
+                  </tbody>
+                </table>
               </div>
             </div>
 
             <div class="signature-section">
-              <label class="section-label">توقيع إخلاء الطرف / الاستلام *</label>
+              <label class="section-label">توقيع إخلاء الطرف / الاستلام (إلزامي للحفظ والطباعة) *</label>
               <div class="sign-tabs">
                 <button type="button" class="sign-tab active" data-target="ret" data-mode="SCREEN">
-                  <i class="fa-solid fa-pen-nib"></i> التوقيع على الشاشة
+                  <i class="fa-solid fa-pen-nib"></i> التوقيع على الشاشة (يظهر في الطباعة)
                 </button>
                 <button type="button" class="sign-tab" data-target="ret" data-mode="UPLOAD">
                   <i class="fa-solid fa-cloud-arrow-up"></i> رفع نموذج تسليم موقع
@@ -354,14 +411,61 @@
 
             <div class="form-actions">
               <button type="submit" class="btn-primary btn-lg">
-                <i class="fa-solid fa-box-archive"></i> تأكيد الاسترجاع وإعادة للمخزون
+                <i class="fa-solid fa-print"></i> اعتماد الاسترجاع والطباعة الإجبارية
               </button>
             </div>
           </form>
         </div>
       </section>
 
-      <!-- 5. الموظفون والأفراد -->
+      <!-- 5. أرشيف السندات والنماذج -->
+      <section id="view-vouchers" class="view">
+        <div class="toolbar wrap">
+          <div class="filters-row">
+            <div class="search-box" style="min-width:220px">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="voucherSearch" placeholder="رقم السند، اسم الموظف..." />
+            </div>
+            <select id="filterVoucherType">
+              <option value="ALL">كل السندات</option>
+              <option value="HANDOVER">سندات تسليم عهدة</option>
+              <option value="RETURN">سندات إرجاع عهدة</option>
+              <option value="IN_STOCK">سندات تغذية مخزون</option>
+            </select>
+            <select id="filterVoucherStatus">
+              <option value="ALL">كل الحالات</option>
+              <option value="ACTIVE">عهدة نشطة</option>
+              <option value="PARTIAL_RETURN">إرجاع جزئي</option>
+              <option value="RETURNED">تم الإرجاع بالكامل</option>
+            </select>
+          </div>
+          <button class="btn-outline" onclick="exportVouchersCSV()">
+            <i class="fa-solid fa-file-excel"></i> تصدير السندات CSV
+          </button>
+        </div>
+
+        <div class="card table-card">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>رقم السند</th>
+                  <th>النوع</th>
+                  <th>الموظف / الطرف</th>
+                  <th>الأصناف والكمية</th>
+                  <th>التاريخ</th>
+                  <th>الحالة</th>
+                  <th>التوثيق</th>
+                  <th>إجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="vouchersTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. الموظفون والأفراد -->
       <section id="view-employees" class="view">
         <div class="toolbar">
           <div class="search-box">
@@ -376,63 +480,169 @@
         <div id="employeesGrid" class="employees-grid"></div>
       </section>
 
-      <!-- 6. سجل الحركة والتقارير -->
-      <section id="view-movements" class="view">
-        <div class="toolbar wrap">
-          <div class="filters-row">
-            <select id="filterTxType">
-              <option value="ALL">كل أنواع الحركات</option>
-              <option value="HANDOVER">تسليم عهدة لموظف</option>
-              <option value="RETURN">استرجاع عهدة للشركة</option>
-              <option value="IN_STOCK">تغذية / إضافة مخزون</option>
-            </select>
-            <select id="filterTxAsset">
-              <option value="ALL">كل الأصناف</option>
-            </select>
-            <select id="filterTxEmployee">
-              <option value="ALL">كل الموظفين</option>
-            </select>
+      <!-- 7. التقارير المفصلة (حسب الصنف أو حسب الموظف) -->
+      <section id="view-reports" class="view">
+        <div class="report-mode-tabs">
+          <button class="rep-tab active" data-rep="asset" onclick="switchReportMode('asset')">
+            <i class="fa-solid fa-laptop-code"></i> تقرير مفصل حسب الصنف
+          </button>
+          <button class="rep-tab" data-rep="employee" onclick="switchReportMode('employee')">
+            <i class="fa-solid fa-user-tie"></i> تقرير مفصل حسب الموظف
+          </button>
+        </div>
+
+        <!-- أ: تقرير الصنف المفصل -->
+        <div id="report-asset-panel" class="report-panel active">
+          <div class="card" style="margin-bottom:18px;">
+            <div class="toolbar wrap" style="margin-bottom:0">
+              <div class="filters-row" style="flex:1">
+                <select id="repAssetSelect" style="min-width:260px" onchange="renderAssetReport()">
+                  <option value="ALL">جميع الأصناف (ملخص شامل)</option>
+                </select>
+                <input type="date" id="repAssetFrom" onchange="renderAssetReport()" />
+                <input type="date" id="repAssetTo" onchange="renderAssetReport()" />
+              </div>
+              <div class="export-btns">
+                <button class="btn-outline" onclick="exportAssetReportCSV()">
+                  <i class="fa-solid fa-file-excel"></i> تصدير Excel
+                </button>
+                <button class="btn-primary" onclick="printAssetReport()">
+                  <i class="fa-solid fa-print"></i> طباعة تقرير الصنف
+                </button>
+              </div>
+            </div>
           </div>
-          <div class="export-btns">
-            <button class="btn-outline" onclick="exportMovementsCSV()">
-              <i class="fa-solid fa-file-excel"></i> تصدير Excel (CSV)
-            </button>
-            <button class="btn-outline" onclick="printMovementsReport()">
-              <i class="fa-solid fa-print"></i> طباعة التقرير
-            </button>
+
+          <div id="repAssetSummaryCards" class="kpi-grid"></div>
+
+          <div class="card" style="margin-bottom:18px;" id="repAssetHoldersCard">
+            <div class="card-header">
+              <h3><i class="fa-solid fa-user-shield"></i> الأفراد الحائزون لهذا الصنف حالياً</h3>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>الموظف</th>
+                    <th>القسم</th>
+                    <th>رقم السند</th>
+                    <th>الكمية المسلمة</th>
+                    <th>المرتجع</th>
+                    <th>المتبقي بحوزته</th>
+                    <th>تاريخ التسليم</th>
+                    <th>مدة العهدة</th>
+                    <th>إجراء</th>
+                  </tr>
+                </thead>
+                <tbody id="repAssetHoldersBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card table-card">
+            <div class="card-header" style="padding:18px 20px 0">
+              <h3><i class="fa-solid fa-clock-rotate-left"></i> السجل التفصيلي لحركة الصنف</h3>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>التاريخ</th>
+                    <th>رقم السند</th>
+                    <th>نوع الحركة</th>
+                    <th>الصنف</th>
+                    <th>الموظف / الطرف</th>
+                    <th>الكمية</th>
+                    <th>الحالة</th>
+                    <th>ملاحظات</th>
+                    <th>السند</th>
+                  </tr>
+                </thead>
+                <tbody id="repAssetMovementsBody"></tbody>
+              </table>
+            </div>
           </div>
         </div>
 
-        <div class="card table-card">
-          <div class="table-responsive">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>رقم العملية</th>
-                  <th>النوع</th>
-                  <th>الصنف / الجهاز</th>
-                  <th>الطرف / الموظف</th>
-                  <th>الكمية</th>
-                  <th>التاريخ</th>
-                  <th>الحالة</th>
-                  <th>التوثيق</th>
-                  <th>إجراءات</th>
-                </tr>
-              </thead>
-              <tbody id="movementsTableBody"></tbody>
-            </table>
+        <!-- ب: تقرير الموظف المفصل -->
+        <div id="report-employee-panel" class="report-panel hidden">
+          <div class="card" style="margin-bottom:18px;">
+            <div class="toolbar wrap" style="margin-bottom:0">
+              <div class="filters-row" style="flex:1">
+                <select id="repEmpSelect" style="min-width:260px" onchange="renderEmployeeReport()">
+                  <option value="ALL">جميع الموظفين (ملخص شامل)</option>
+                </select>
+                <input type="date" id="repEmpFrom" onchange="renderEmployeeReport()" />
+                <input type="date" id="repEmpTo" onchange="renderEmployeeReport()" />
+              </div>
+              <div class="export-btns">
+                <button class="btn-outline" onclick="exportEmployeeReportCSV()">
+                  <i class="fa-solid fa-file-excel"></i> تصدير Excel
+                </button>
+                <button class="btn-primary" onclick="printEmployeeReport()">
+                  <i class="fa-solid fa-print"></i> طباعة كشف عهدة الموظف
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div id="repEmpSummaryCards" class="kpi-grid"></div>
+
+          <div class="card" style="margin-bottom:18px;">
+            <div class="card-header">
+              <h3><i class="fa-solid fa-laptop"></i> العهد الحالية النشطة في ذمة الموظف</h3>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>الموظف</th>
+                    <th>الصنف / الجهاز</th>
+                    <th>الكود / التسلسلي</th>
+                    <th>رقم سند التسليم</th>
+                    <th>المسلم</th>
+                    <th>المتبقي بذمته</th>
+                    <th>تاريخ التسليم</th>
+                    <th>مدة الحيازة</th>
+                    <th>إجراءات</th>
+                  </tr>
+                </thead>
+                <tbody id="repEmpActiveBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card table-card">
+            <div class="card-header" style="padding:18px 20px 0">
+              <h3><i class="fa-solid fa-list"></i> السجل التاريخي الكامل لاستلام وتسليم الموظف</h3>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>التاريخ</th>
+                    <th>رقم السند</th>
+                    <th>النوع</th>
+                    <th>الموظف</th>
+                    <th>الصنف</th>
+                    <th>الكمية</th>
+                    <th>الحالة</th>
+                    <th>ملاحظات</th>
+                    <th>طباعة</th>
+                  </tr>
+                </thead>
+                <tbody id="repEmpHistoryBody"></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </section>
     </main>
 
-    <!-- شريط التنقل السفلي للجوال -->
+    <!-- شريط الجوال السفلي -->
     <nav class="mobile-bottom-nav">
       <button class="m-nav-item active" data-view="dashboard">
         <i class="fa-solid fa-chart-pie"></i><span>الرئيسية</span>
-      </button>
-      <button class="m-nav-item" data-view="assets">
-        <i class="fa-solid fa-laptop-code"></i><span>الأرصدة</span>
       </button>
       <button class="m-nav-item" data-view="handover">
         <i class="fa-solid fa-hand-holding-hand"></i><span>تسليم</span>
@@ -440,14 +650,16 @@
       <button class="m-nav-item" data-view="return">
         <i class="fa-solid fa-rotate-left"></i><span>استرجاع</span>
       </button>
-      <button class="m-nav-item" data-view="movements">
-        <i class="fa-solid fa-clock-rotate-left"></i><span>الحركة</span>
+      <button class="m-nav-item" data-view="vouchers">
+        <i class="fa-solid fa-file-invoice"></i><span>السندات</span>
+      </button>
+      <button class="m-nav-item" data-view="reports">
+        <i class="fa-solid fa-chart-line"></i><span>التقارير</span>
       </button>
     </nav>
   </div>
 
-  <!-- النوافذ المنبثقة (Modals) -->
-  <!-- 1. إضافة / تعديل صنف -->
+  <!-- النوافذ المنبثقة -->
   <div id="modal-asset" class="modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -474,7 +686,7 @@
           </div>
           <div class="form-group">
             <label>الكود الداخلي</label>
-            <input type="text" id="assetCode" placeholder="يُنشأ تلقائياً إذا تُرك فارغاً" />
+            <input type="text" id="assetCode" placeholder="تلقائي إذا تُرك فارغاً" />
           </div>
           <div class="form-group">
             <label>الرقم التسلسلي (Serial)</label>
@@ -497,7 +709,6 @@
     </div>
   </div>
 
-  <!-- 2. إضافة / تعديل موظف -->
   <div id="modal-employee" class="modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -536,7 +747,6 @@
     </div>
   </div>
 
-  <!-- 3. إعدادات الربط بـ Google Apps Script -->
   <div id="modal-settings" class="modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -562,22 +772,20 @@
     </div>
   </div>
 
-  <!-- 4. تفاصيل الحركة والتوقيع -->
-  <div id="modal-tx-details" class="modal">
-    <div class="modal-content">
+  <div id="modal-voucher-details" class="modal">
+    <div class="modal-content modal-lg">
       <div class="modal-header">
-        <h3>تفاصيل حركة العهدة</h3>
-        <button class="close-modal" onclick="closeModal('modal-tx-details')">&times;</button>
+        <h3 id="vModalTitle">تفاصيل السند</h3>
+        <button class="close-modal" onclick="closeModal('modal-voucher-details')">&times;</button>
       </div>
-      <div id="txDetailsBody"></div>
+      <div id="voucherDetailsBody"></div>
     </div>
   </div>
 
-  <!-- حاوية الإشعارات والتحميل -->
   <div id="toastContainer" class="toast-container"></div>
   <div id="loadingOverlay" class="loading-overlay hidden">
     <div class="spinner"></div>
-    <p id="loadingText">جاري مزامنة البيانات مع Google Sheets...</p>
+    <p id="loadingText">جاري مزامنة البيانات...</p>
   </div>
 
   <!-- منطقة الطباعة الرسمية A4 -->
